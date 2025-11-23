@@ -65,7 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. 뷰(View) 렌더링 함수들 (화면 그리기)
     // -------------------------------------------------------
 
-    // A. 질문(퀴즈) 화면 그리기
     function renderQuiz() {
         quizContainer.classList.remove('hidden');
         resultContainer.classList.add('hidden');
@@ -74,39 +73,30 @@ document.addEventListener('DOMContentLoaded', () => {
         window.scrollTo(0, 0);
     }
 
-    // B. 결과(내 결과/상세) 화면 그리기
-    // type: 보여줄 성격 유형, savedScrollY: 복구할 스크롤 위치 (없으면 0), isMyResult: 내 결과인지 여부
     function renderResult(type, savedScrollY = 0, isMyResult = true) {
         if (!type) return;
 
-        // 화면 전환
         quizContainer.classList.add('hidden');
         resultContainer.classList.remove('hidden');
         allTypesContainer.classList.add('hidden');
         if (intro_text) intro_text.classList.add('hidden');
 
-        // 내용 채우기
         const resultData = typeDescriptions[type];
         resultTypeEl.innerHTML = `${type} - ${resultData.name}`;
         resultDescriptionEl.textContent = resultData.description || '没有结果';
 
-        // 이미지 처리
         Object.values(images).forEach(img => img && img.classList.add('hidden'));
         if (images[type]) images[type].classList.remove('hidden');
 
-        // 버튼 상태 관리
         if (isMyResult) {
-            // 내 결과 화면일 때: '모든 유형 보기' 버튼 표시
             toggleAllTypesBtn.classList.remove('hidden');
             backToListBtn.classList.add('hidden');
             toggleAllTypesBtn.textContent = '查看所有类型';
         } else {
-            // 다른 유형 상세 화면일 때: '뒤로가기' 버튼 표시
             toggleAllTypesBtn.classList.add('hidden');
             backToListBtn.classList.remove('hidden');
         }
 
-        // 스크롤 복구 (렌더링 직후 실행)
         setTimeout(() => {
             window.scrollTo(0, savedScrollY);
         }, 0);
@@ -116,7 +106,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. 로직 및 이벤트 핸들러
     // -------------------------------------------------------
 
-    // 질문 로드
     function loadQuestions() {
         questions.forEach((q, index) => {
             const questionItem = document.createElement('div');
@@ -131,7 +120,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 결과 계산
     function calculateResult() {
         const scores = { D: 0, P: 0, S: 0, F: 0, G: 0, C: 0 };
         const formData = new FormData(quizForm);
@@ -146,9 +134,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return result;
     }
 
-    // 리스트 로드 및 클릭 이벤트
     function loadAllTypes() {
-        allTypesContainer.innerHTML = '<h3>所有类型</h3>';
+        allTypesContainer.innerHTML = '<h3>点击查看所有类型</h3>';
         for (const type in typeDescriptions) {
             const data = typeDescriptions[type];
             const typeBlock = document.createElement('div');
@@ -156,25 +143,21 @@ document.addEventListener('DOMContentLoaded', () => {
             typeBlock.setAttribute('data-type', type);
             typeBlock.innerHTML = `<h4>${type} - ${data.name}</h4>`;
 
-            // [핵심] 리스트 아이템 클릭 이벤트
             typeBlock.addEventListener('click', function() {
                 const clickedType = this.getAttribute('data-type');
 
-                // 1. 현재 화면(내 결과)의 스크롤 위치를 '현재 히스토리'에 저장 업데이트
                 history.replaceState({
                     page: 'my_result',
                     type: userTestResult,
                     scrollY: window.scrollY
                 }, '');
 
-                // 2. 새로운 상세 페이지 히스토리 추가 (Push)
                 history.pushState({
                     page: 'detail',
                     type: clickedType
                 }, '', `#view-${clickedType}`);
 
-                // 3. 상세 화면 렌더링
-                renderResult(clickedType, 0, false); // false = 상세화면(뒤로가기 버튼 보임)
+                renderResult(clickedType, 0, false);
             });
 
             allTypesContainer.appendChild(typeBlock);
@@ -185,7 +168,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // 4. 이벤트 리스너 연결
     // -------------------------------------------------------
 
-    // [제출 버튼]
     submitBtn.addEventListener('click', (e) => {
         e.preventDefault();
         const checkedInputs = quizForm.querySelectorAll('input[type="radio"]:checked');
@@ -197,52 +179,51 @@ document.addEventListener('DOMContentLoaded', () => {
         const result = calculateResult();
         userTestResult = result;
 
-        // [히스토리 추가] 결과 화면으로 이동
         history.pushState({ page: 'my_result', type: result, scrollY: 0 }, '', '#result');
         renderResult(result, 0, true);
     });
 
-    // [모든 유형 보기 버튼] - 단순히 리스트 보이기/숨기기 (히스토리 변경 없음)
+    // [모든 유형 보기 버튼] - 리스트 열고 자동으로 스크롤
     toggleAllTypesBtn.addEventListener('click', () => {
         const isHidden = allTypesContainer.classList.contains('hidden');
         if (isHidden) {
+            // 1. 리스트 보이기
             allTypesContainer.classList.remove('hidden');
             toggleAllTypesBtn.textContent = '收起所有类型';
+
+            // 2. [추가된 기능] 부드럽게 리스트 위치로 스크롤 이동
+            setTimeout(() => {
+                allTypesContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 50); // 0.05초 딜레이로 렌더링 후 실행 보장
         } else {
             allTypesContainer.classList.add('hidden');
             toggleAllTypesBtn.textContent = '查看所有类型';
         }
     });
 
-    // [뒤로가기(返回) 버튼] - 브라우저 뒤로가기 실행
     backToListBtn.addEventListener('click', () => {
         history.back();
     });
 
-    // [다시 시작 버튼]
     restartBtn.addEventListener('click', () => {
         userTestResult = null;
-        // [히스토리 추가] 퀴즈 화면으로 이동
         history.pushState({ page: 'quiz' }, '', 'index.html');
         renderQuiz();
         quizForm.reset();
     });
 
     // -------------------------------------------------------
-    // 5. [핵심] 브라우저 뒤로가기/앞으로가기 감지 (popstate)
+    // 5. 브라우저 뒤로가기/앞으로가기 감지 (popstate)
     // -------------------------------------------------------
     window.addEventListener('popstate', (event) => {
         const state = event.state;
 
-        // state가 없거나(초기화 전), page가 'quiz'면 질문 화면
         if (!state || state.page === 'quiz') {
             renderQuiz();
         } 
-        // 내 결과 화면으로 복귀
         else if (state.page === 'my_result') {
             renderResult(state.type, state.scrollY, true);
         } 
-        // 상세 화면으로 복귀
         else if (state.page === 'detail') {
             renderResult(state.type, 0, false);
         }
@@ -254,15 +235,12 @@ document.addEventListener('DOMContentLoaded', () => {
     loadQuestions();
     loadAllTypes();
 
-    // 페이지 최초 로드 시 현재 URL/상태에 따라 화면 결정
     if (history.state) {
-        // 새로고침 등으로 상태가 남아있는 경우 복원
         const state = history.state;
         if (state.page === 'my_result') renderResult(state.type, state.scrollY, true);
         else if (state.page === 'detail') renderResult(state.type, 0, false);
         else renderQuiz();
     } else {
-        // 아무 상태도 없으면 현재를 'quiz' 상태로 초기화 (replaceState)
         history.replaceState({ page: 'quiz' }, '', '');
         renderQuiz();
     }
