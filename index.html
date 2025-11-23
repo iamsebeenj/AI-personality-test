@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head> 
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>AI性格实验室 
+    </title> 
+    <link rel="stylesheet" href="style.css">
+</head>
+<body> 
+    <div class="container"> 
+        <div class="logo-container"> 
+            <img src="PINNIX Logo.png" alt="PINNIX Logo" class="logo"> 
+        </div> 
+        <h1>PINNIX AI性格实验室</h1> 
+
+        <p class="intro-text" id="intro-text"> 
+        欢迎进入「PINNIX AI性格实验室」， 在这里以全新的科技思维框架解析你的独特算法人格，轻松一点，即刻开启自我探索之旅，释放你的无限可能！ 
+        </p> 
+        <div id="quiz-container"> 
+            <form id="quiz-form"> </form> 
+            <button id="submit-btn">查看结果</button> 
+        </div> 
+        
+        <div id="result-container" class="hidden"> 
+            <h2>你的AI性格类型是: <span id="result-type"></span></h2> 
+            <img src="public/1_DSG_PINNIX_AI性格实验室.jpg" class="hidden result-img" id="DSG"/> 
+            <img src="public/2_DSC_PINNIX_AI性格实验室.jpg" class="hidden result-img" id="DSC"/> 
+            <img src="public/3_DFG_PINNIX_AI性格实验室.jpg" class="hidden result-img" id="DFG"/> 
+            <img src="public/4_DFC_PINNIX_AI性格实验室.jpg" class="hidden result-img" id="DFC"/> 
+            <img src="public/7_PFG_PINNIX_AI性格实验室.jpg" class="hidden result-img" id="PFG"/> 
+            <img src="public/8_PFC_PINNIX_AI性格实验室.jpg" class="hidden result-img" id="PFC"/> 
+            <img src="public/6_PSC_PINNIX_AI性格实验室.jpg" class="hidden result-img" id="PSC"/> 
+            <img src="public/5_PSG_PINNIX_AI性格实验室.jpg" class="hidden result-img" id="PSG"/> 
+            
+            <p id="result-description"></p> 
+            <button id="restart-btn">重新测试</button>
+            <button id="back-to-list-btn" class="hidden">返回</button>
+            <button id="toggle-all-types-btn">查看所有类型</button> 
+        </div> 
+        <div id="all-types-container" class="hidden"> 
+            <h3>所有类型</h3> 
+        </div> 
+    </div> 
+    <script src="script.js"></script> 
+</body> 
+</html>
