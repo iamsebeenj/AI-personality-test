@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // DOM 요소 가져오기
+    // 0. DOM 요소 가져오기
     const quizForm = document.getElementById('quiz-form');
     const submitBtn = document.getElementById('submit-btn');
     const quizContainer = document.getElementById('quiz-container');
@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const backToListBtn = document.getElementById('back-to-list-btn');
     const intro_text = document.getElementById('intro-text');
 
-    // [중요] 사용자의 원래 결과를 저장할 변수
+    // 사용자의 원래 결과를 저장할 변수
     let userTestResult = null;
 
     // 이미지 요소 가져오기
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
         PFC: document.getElementById('PFC')
     };
 
-    // 1. 질문 데이터 (내용 생략 - 기존과 동일)
+    // 1. 질문 데이터
     const questions = [
         { type: 'DP', question: '在处理一个全新的、缺乏标注的领域时，你的首要行动是——', options: [{ text: '设计严格的采集和标注流程，确保数据质量和覆盖度', value: 'D' }, { text: '利用预训练模型快速识别出数据的结构和潜在关联', value: 'P' }] },
         { type: 'DP', question: '当需要对一个复杂现象进行建模时，你更倾向于——', options: [{ text: '构建逻辑清晰、参数可解释的线性或树形模型', value: 'D' }, { text: '构建能捕捉非线性关系、以高预测准确率为目标的深度学习模型', value: 'P' }] },
@@ -58,96 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
         PFC: { name: 'AI生态战略专家', description: '你是注重 Flexibility（适应性）、Connection（链接）、Goal（目标）的 PFC 类型。作为生态系统整合者，你连接不同领域的模式并持续创造价值流，是多系统协同与技术生态建设的核心催化剂。在职场中，PFC 对应 AI 生态战略专家或多智能体系统研究员，负责整合不同 AI 系统与行业资源，构建协同共生的技术生态，推动自主系统的整体性能与创新能力提升。PFC 的潜能将在「自主系统集成、跨产业 AI 协同、基于智能体的仿真」等领域得到快速成长，展现广阔前景。' },
     };
 
-    // --- 히스토리 관리 및 UI 렌더링 로직 ---
-
-    // 페이지 로드 시 초기 상태 설정
-    history.replaceState({ page: 'quiz' }, '', '');
-
-    // 브라우저 뒤로가기/앞으로가기 이벤트 감지
-    window.addEventListener('popstate', (event) => {
-        const state = event.state;
-        if (!state) return;
-
-        if (state.page === 'quiz') {
-            renderQuiz();
-        } else if (state.page === 'result') {
-            // 결과 화면 복원 시 저장된 스크롤 위치가 있으면 이동
-            renderResult(state.type);
-            if (state.scrollY !== undefined) {
-                // DOM 렌더링 직후 스크롤 이동
-                setTimeout(() => window.scrollTo(0, state.scrollY), 0);
-            }
-        } else if (state.page === 'list') {
-            renderList();
-        } else if (state.page === 'detail') {
-            // 만약 앞으로 가기를 통해 상세 페이지로 왔을 때
-            renderDetail(state.type);
-        }
-    });
-
-    // 화면 그리기: 질문(퀴즈) 화면
-    function renderQuiz() {
-        quizContainer.classList.remove('hidden');
-        resultContainer.classList.add('hidden');
-        allTypesContainer.classList.add('hidden');
-        if(intro_text) intro_text.classList.remove('hidden');
-        window.scrollTo(0, 0);
-    }
-
-    // 화면 그리기: 결과 화면 (내 원래 결과)
-    function renderResult(type) {
-        if (!type) return;
-        
-        quizContainer.classList.add('hidden');
-        resultContainer.classList.remove('hidden');
-        allTypesContainer.classList.add('hidden');
-        if(intro_text) intro_text.classList.add('hidden');
-
-        // 텍스트 및 이미지 설정
-        updateResultContent(type);
-
-        // 버튼 상태: '모든 유형 보기' 보이기, '뒤로가기' 숨기기
-        toggleAllTypesBtn.classList.remove('hidden');
-        backToListBtn.classList.add('hidden');
-        toggleAllTypesBtn.textContent = '查看所有类型';
-    }
-
-    // 화면 그리기: 리스트 화면 (이 함수는 히스토리 popstate에서만 쓰임, 클릭 이벤트는 별도 처리)
-    function renderList() {
-        allTypesContainer.classList.remove('hidden');
-        toggleAllTypesBtn.textContent = '收起所有类型';
-    }
-
-    // 화면 그리기: 다른 유형 상세 화면
-    function renderDetail(type) {
-        quizContainer.classList.add('hidden');
-        resultContainer.classList.remove('hidden');
-        allTypesContainer.classList.add('hidden'); // 리스트 숨김
-        if(intro_text) intro_text.classList.add('hidden');
-
-        updateResultContent(type);
-
-        // 버튼 상태: '모든 유형 보기' 숨기기, '뒤로가기' 보이기
-        toggleAllTypesBtn.classList.add('hidden');
-        backToListBtn.classList.remove('hidden');
-        window.scrollTo(0, 0);
-    }
-
-    // 공통 함수: 결과 내용(텍스트, 이미지) 업데이트
-    function updateResultContent(type) {
-        const resultData = typeDescriptions[type];
-        resultTypeEl.innerHTML = `${type} - ${resultData.name}`;
-        resultDescriptionEl.textContent = resultData.description || '没有结果';
-
-        // 모든 이미지 숨기기
-        Object.values(images).forEach(img => img && img.classList.add('hidden'));
-        // 해당 이미지 보이기
-        if (images[type]) images[type].classList.remove('hidden');
-    }
-
-    // ----------------------------------------
-
-    // 3. 질문 동적 생성 함수
+    // -------------------------------------------------------------------
+    // 3. 질문 생성
     function loadQuestions() {
         questions.forEach((q, index) => {
             const questionItem = document.createElement('div');
@@ -164,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 4. 모든 유형 리스트 생성 및 클릭 이벤트
+    // 4. 리스트 생성
     function loadAllTypes() { 
         allTypesContainer.innerHTML = '<h3>所有类型</h3>'; 
         for (const type in typeDescriptions) { 
@@ -174,17 +86,17 @@ document.addEventListener('DOMContentLoaded', () => {
             typeBlock.setAttribute('data-type', type);
             typeBlock.innerHTML = `<h4>${type} - ${data.name}</h4>`; 
             
-            // [핵심 로직] 리스트에서 유형 클릭 시
+            // [중요] 리스트 클릭 시: 상세 페이지로 '이동'하는 기록을 남김 (pushState)
             typeBlock.addEventListener('click', function() {
                 const clickedType = this.getAttribute('data-type');
                 
-                // 1. 현재 화면(List가 열려있는 상태)을 히스토리 스택에서 '대체(replace)' 합니다.
-                // 왜? 이렇게 해야 '뒤로가기'를 눌렀을 때 List가 아닌, 그 전 단계(내 결과)로 가기 때문입니다.
-                // 이때 type: userTestResult를 저장하는 것이 아니라 'detail' 상태로 변경합니다.
+                // 1. 현재(내 결과) 화면의 스크롤 위치를 '현재 기록'에 업데이트 저장
+                history.replaceState({ page: 'result', type: userTestResult, scrollY: window.scrollY }, '');
+
+                // 2. 새로운 상세 화면 기록을 '추가' (pushState)
+                history.pushState({ page: 'detail', type: clickedType }, '', `#view-${clickedType}`);
                 
-                // 상세 페이지로 이동 (Replace State 사용 - 리스트 이력을 덮어씀)
-                history.replaceState({ page: 'detail', type: clickedType }, '', `#view-${clickedType}`);
-                
+                // 3. 상세 화면 그리기
                 renderDetail(clickedType);
             });
 
@@ -192,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 5. 결과 계산 함수
+    // 5. 결과 계산
     function calculateResult() {
         const scores = { D: 0, P: 0, S: 0, F: 0, G: 0, C: 0};
         const formData = new FormData(quizForm);
@@ -207,8 +119,94 @@ document.addEventListener('DOMContentLoaded', () => {
         return result;
     }
 
-    // ----------------------------------------
-    // 이벤트 리스너
+    // -------------------------------------------------------------------
+    // [핵심] 렌더링 함수들 (화면을 그리는 역할)
+
+    // A. 질문(퀴즈) 화면 그리기
+    function renderQuiz() {
+        quizContainer.classList.remove('hidden');
+        resultContainer.classList.add('hidden');
+        allTypesContainer.classList.add('hidden');
+        if(intro_text) intro_text.classList.remove('hidden');
+        
+        // 폼 초기화는 필요 시에만 수행
+        // quizForm.reset(); 
+        window.scrollTo(0, 0);
+    }
+
+    // B. 결과(내 결과/상세) 화면 내용 채우기
+    function updateResultContent(type) {
+        const resultData = typeDescriptions[type];
+        resultTypeEl.innerHTML = `${type} - ${resultData.name}`;
+        resultDescriptionEl.textContent = resultData.description || '没有结果';
+
+        // 이미지 처리
+        Object.values(images).forEach(img => img && img.classList.add('hidden'));
+        if (images[type]) images[type].classList.remove('hidden');
+    }
+
+    // C. 내 결과 화면 그리기 (스크롤 복구 기능 포함)
+    function renderResult(type, savedScrollY = 0) {
+        if (!type) return;
+
+        quizContainer.classList.add('hidden');
+        resultContainer.classList.remove('hidden');
+        allTypesContainer.classList.add('hidden'); // 리스트 닫기
+        if(intro_text) intro_text.classList.add('hidden');
+
+        updateResultContent(type);
+
+        // 버튼 상태: '모든 유형 보기' 보이기
+        toggleAllTypesBtn.classList.remove('hidden');
+        backToListBtn.classList.add('hidden');
+        toggleAllTypesBtn.textContent = '查看所有类型';
+
+        // 스크롤 복구
+        setTimeout(() => window.scrollTo(0, savedScrollY), 0);
+    }
+
+    // D. 상세 유형 화면 그리기 (다른 유형 보기)
+    function renderDetail(type) {
+        quizContainer.classList.add('hidden');
+        resultContainer.classList.remove('hidden');
+        allTypesContainer.classList.add('hidden');
+        if(intro_text) intro_text.classList.add('hidden');
+
+        updateResultContent(type);
+
+        // 버튼 상태: '뒤로가기' 보이기
+        toggleAllTypesBtn.classList.add('hidden');
+        backToListBtn.classList.remove('hidden');
+        
+        window.scrollTo(0, 0);
+    }
+
+    // -------------------------------------------------------------------
+    // [핵심] 브라우저 히스토리 이벤트 리스너 (뒤로가기 감지)
+
+    window.addEventListener('popstate', (event) => {
+        const state = event.state;
+
+        // 1. 상태가 없으면 (맨 처음) -> 질문 화면
+        if (!state) {
+            renderQuiz();
+            return;
+        }
+
+        // 2. 상태에 따라 화면 그리기
+        if (state.page === 'result') {
+            // 내 결과 화면으로 복귀 + 스크롤 복구
+            renderResult(state.type, state.scrollY);
+        } else if (state.page === 'detail') {
+            // 상세 화면으로 복귀
+            renderDetail(state.type);
+        } else if (state.page === 'quiz') {
+            renderQuiz();
+        }
+    });
+
+    // -------------------------------------------------------------------
+    // 버튼 이벤트 리스너
 
     // [제출 버튼]
     submitBtn.addEventListener('click', (e) => {
@@ -220,43 +218,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const result = calculateResult();
-        userTestResult = result; // 원래 결과 저장
+        userTestResult = result; 
         
-        // 결과 화면을 히스토리에 추가
+        // [기록] 결과 화면으로 이동했다는 기록 남기기
         history.pushState({ page: 'result', type: result, scrollY: 0 }, '', '#result');
         renderResult(result);
-        window.scrollTo(0, 0);
     });
 
-    // [모든 유형 보기 버튼]
+    // [모든 유형 보기 버튼] - 리스트 열기/닫기
     toggleAllTypesBtn.addEventListener('click', () => {
         const isHidden = allTypesContainer.classList.contains('hidden');
         
         if (isHidden) {
-            // 리스트를 열 때: 현재 '내 결과' 화면의 스크롤 위치를 저장해둡니다.
-            // replaceState를 써서 현재 이력(result)에 scrollY 정보를 업데이트합니다.
-            history.replaceState({ page: 'result', type: userTestResult, scrollY: window.scrollY }, '', '#result');
-
-            // 그 다음 리스트 상태를 push 합니다.
-            history.pushState({ page: 'list' }, '', '#list');
-            renderList();
+            // 리스트 열기
+            allTypesContainer.classList.remove('hidden');
+            toggleAllTypesBtn.textContent = '收起所有类型';
+            // 리스트를 여는 것은 페이지 이동은 아니지만, 스크롤 위치 저장을 위해 현재 상태 업데이트
+            history.replaceState({ page: 'result', type: userTestResult, scrollY: window.scrollY }, '');
         } else {
-            // 리스트를 닫을 때 (접기 버튼): 뒤로가기와 동일하게 동작
-            history.back();
+            // 리스트 닫기
+            allTypesContainer.classList.add('hidden');
+            toggleAllTypesBtn.textContent = '查看所有类型';
         }
     });
 
-    // [뒤로가기(返回) 버튼]
-    // 이제 이 버튼은 브라우저의 뒤로가기 기능을 그대로 수행하면 됩니다.
-    // 리스트 이력이 replace 되었기 때문에, 뒤로가기를 하면 '내 결과'로 이동합니다.
+    // [뒤로가기(返回) 버튼] - 브라우저 뒤로가기와 동일하게 동작
     backToListBtn.addEventListener('click', () => {
-        history.back();
+        history.back(); // 브라우저 뒤로가기 실행 -> popstate 이벤트 발생 -> renderResult 실행됨
     });
 
     // [다시 테스트하기 버튼]
     restartBtn.addEventListener('click', () => {
         userTestResult = null;
-        // 퀴즈 화면으로 이동 (새로운 이력 추가)
+        // [기록] 처음으로 돌아갔다는 기록 남기기 (선택사항, 보통은 그냥 reload하거나 replace)
+        // 여기서는 깔끔하게 퀴즈 상태를 push 합니다.
         history.pushState({ page: 'quiz' }, '', 'index.html');
         renderQuiz();
         quizForm.reset();
@@ -265,4 +260,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // 초기 실행
     loadQuestions();
     loadAllTypes();
+    
+    // 페이지 로드 시 현재 상태에 맞춰 렌더링 (새로고침 대응 등)
+    if (history.state) {
+        if (history.state.page === 'result') renderResult(history.state.type, history.state.scrollY);
+        else if (history.state.page === 'detail') renderDetail(history.state.type);
+    } else {
+        // 아무 상태도 없으면 현재 상태를 'quiz'로 정의
+        history.replaceState({ page: 'quiz' }, '', '');
+    }
 });
